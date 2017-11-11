@@ -35,12 +35,12 @@ class api(Resource):
             else:
                 command = "virsh list"
                 result = libvirt.run_command(command, args['hypervisor'], args['customer'])
-            return result
+            return jsonify(result)
 
         elif args['command'] == "get-vm":
             command = "virsh list {0}".format(args['params'])
             result = libvirt.run_command(command, args['hypervisor'], args['customer'])
-            return result
+            return jsonify(result)
 
         elif args['command'] == "new-vm":
             if args['params'] == "win7":
@@ -50,32 +50,32 @@ class api(Resource):
             elif args['params'] == "debian":
                 command = "virt-clone debianVM"
             result = libvirt.virt_install(command, args['hypervisor'], args['customer'])
-            return result
+            return jsonify(result)
 
         elif args['command'] == "start-vm":
             command = "start {0}".format(args['params'])
             result = libvirt.run_command(command, args['hypervisor'], args['customer'])
-            return result
+            return jsonify(result)
 
         elif args['command'] == "stop-vm":
             command = "stop {0}".format(args['params'])
             result = libvirt.run_command(command, args['hypervisor'], args['customer'])
-            return result
+            return jsonify(result)
 
         elif args['command'] == "backup-vm":
             command = "snapshot-create {0}".format(args['params'])
             result = libvirt.run_command(command, args['hypervisor'], args['customer'])
-            return result
+            return jsonify(result)
 
         elif args['command'] == "restore-vm":
             command = "snapshot-revert {0}".format(args['params'])
             result = libvirt.run_command(command, args['hypervisor'], args['customer'])
-            return result
+            return jsonify(result)
 
         elif args['command'] == "modify-vm":
             command = "setmem {0}".format(args['params'])
             result = libvirt.run_command(command, args['hypervisor'], args['customer'])
-            return result
+            return jsonify(result)
 
 
 
