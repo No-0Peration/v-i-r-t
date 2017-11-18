@@ -14,7 +14,7 @@ class libvirt(Resource):
         result = os.command(virsh_command)
         return result
 
-# POST /controller command=<string:command>&hypervisor=<string:hypervisorID>&customer=<string:customerID>
+# POST /controller command=<string:command>&params=<string:hypervisorID>&customer=<string:customerID>
 class api(Resource):
     def post(self):
         # parse post arguments
@@ -22,7 +22,7 @@ class api(Resource):
         parser.add_argument('command')
         parser.add_argument('params')
         parser.add_argument('hypervisor')
-        parser.add_argument('customer')
+        parser.add_argument('customernetwork')
         args = parser.parse_args()
 
         if args['command'] == "list-vms":
@@ -42,6 +42,11 @@ class api(Resource):
             result = libvirt.run_command(command, args['hypervisor'], args['customer'])
             return jsonify(result)
 
+        elif args['command'] == "vm-info":
+            command = "dominfo {0}".format(args['params'])
+            result = libvirt.run_command(command, args['hypervisor'], args['customer'])
+            return jsonify(result)
+
         elif args['command'] == "new-vm":
             if args['params'] == "win7":
                 command = "virt-clone windows7VM"
@@ -50,7 +55,7 @@ class api(Resource):
             elif args['params'] == "debian":
                 command = "virt-clone debianVM"
             result = libvirt.virt_install(command, args['hypervisor'], args['customer'])
-            return jsonify(result)
+            return jsonify(result) # return VMnaam
 
         elif args['command'] == "start-vm":
             command = "start {0}".format(args['params'])
