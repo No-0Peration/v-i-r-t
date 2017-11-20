@@ -23,7 +23,7 @@ class api(Resource):
         parser.add_argument('command')
         parser.add_argument('params')
         parser.add_argument('hypervisor')
-        parser.add_argument('customernetwork')
+        parser.add_argument('customer')
         args = parser.parse_args()
 
         if args['command'] == "list-vms":
