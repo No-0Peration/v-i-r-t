@@ -4,7 +4,7 @@ import os
 
 #class which connects to a hypervisor and performs a command requested from the api
 def run_command(command,hypervisor):
-    virsh_command = "virsh -c qemu+ssh://user@{0}/system {1}".format(hypervisor, command)
+    virsh_command = "virsh -c qemu+ssh://{0}/system {1}".format(hypervisor, command)
     print(str(virsh_command))
     result = os.system(virsh_command)
     return result
@@ -27,13 +27,13 @@ class api(Resource):
 
         if args['command'] == "list-vms":
             if args['params'] == "powered-on":
-                command = "virsh list --all"
+                command = "list --all"
                 result = run_command(command,args['hypervisor'])
             elif args['params'] == "powered-off":
-                command = "virsh list --all"
+                command = "list --all"
                 result = run_command(command, args['hypervisor'])
             else:
-                command = "virsh list --all"
+                command = "list --all"
                 result = run_command(command, args['hypervisor'])
             return jsonify(result)
 
