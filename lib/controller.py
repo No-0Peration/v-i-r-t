@@ -29,13 +29,13 @@ class api(Resource):
         if args['command'] == "list-vms":
             if args['params'] == "powered-on":
                 command = "virsh list"
-                result = libvirt.run_command(command,args['hypervisor'],args['customer'])
+                result = libvirt.run_command(command,args['hypervisor'])
             elif args['params'] == "powered-off":
                 command = "virsh list"
-                result = libvirt.run_command(command, args['hypervisor'], args['customer'])
+                result = libvirt.run_command(command, args['hypervisor'])
             else:
                 command = "virsh list"
-                result = libvirt.run_command(command, args['hypervisor'], args['customer'])
+                result = libvirt.run_command(command, args['hypervisor'])
             return jsonify(result)
 
         elif args['command'] == "get-vm":
