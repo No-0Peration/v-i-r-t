@@ -3,15 +3,15 @@ from flask import jsonify
 import os
 
 #class which connects to a hypervisor and performs a command requested from the api
-def run_command(self, command,hypervisor):
-    virsh_command = "virsh -c qemu+ssh://libvirtuser@{0} {1}".format(hypervisor, command)
+def run_command(command,hypervisor):
+    virsh_command = "virsh -c qemu+ssh://user@{0}/system {1}".format(hypervisor, command)
     print(str(virsh_command))
-    result = os.command(virsh_command)
+    result = os.system(virsh_command)
     return result
 
-def virt_install(self, command,hypervisor,customer):
+def virt_install(command,hypervisor,customer):
     virsh_command = "virt-install --connect=qemu+ssh://libvirtuser@{0} {1} {2}".format(hypervisor, customer, command)
-    result = os.command(virsh_command)
+    result = os.system(virsh_command)
     return result
 
 # POST /controller command=<string:command>&params=<string:hypervisorID>&customer=<string:customerID>
@@ -27,13 +27,13 @@ class api(Resource):
 
         if args['command'] == "list-vms":
             if args['params'] == "powered-on":
-                command = "virsh list"
+                command = "virsh list --all"
                 result = run_command(command,args['hypervisor'])
             elif args['params'] == "powered-off":
-                command = "virsh list"
+                command = "virsh list --all"
                 result = run_command(command, args['hypervisor'])
             else:
-                command = "virsh list"
+                command = "virsh list --all"
                 result = run_command(command, args['hypervisor'])
             return jsonify(result)
 
