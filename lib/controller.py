@@ -4,12 +4,13 @@ import os
 
 #class which connects to a hypervisor and performs a command requested from the api
 class libvirt(Resource):
-    def run_command(self,command,params,hypervisor,customer):
-        virsh_command = "virsh -c qemu+ssh://libvirtuser@{0} {1} {2}".format(hypervisor, customer, command)
+    def run_command(self,command,hypervisor):
+        virsh_command = "virsh -c qemu+ssh://libvirtuser@{0} {1}".format(hypervisor, command)
+        print(str(virsh_command))
         result = os.command(virsh_command)
         return result
 
-    def virt_install(self,command,params,hypervisor,customer):
+    def virt_install(self,command,hypervisor,customer):
         virsh_command = "virt-install --connect=qemu+ssh://libvirtuser@{0} {1} {2}".format(hypervisor, customer, command)
         result = os.command(virsh_command)
         return result
