@@ -49,34 +49,6 @@ def command():
             virshCommand = "list --all"
         else:
             virshCommand = "dumpxml sne1"
-    result = run_command(virshCommand, hypervisor)
-    return json.loads(result)
+    return run_command(virshCommand, hypervisor)
 
 run(host='0.0.0.0', port=11111, debug=True)
-
-# import os, re, json
-#
-# def response_parser(result):
-#     parsed_result = ""
-#     return parsed_result
-#
-# def run_command(command,hypervisor):
-#     virshCommand = "virsh -c qemu+ssh://{0}/system {1}".format(hypervisor, command)
-#     result = os.popen(virshCommand).read()
-#     result = result.splitlines()
-#     newresult = []
-#     first = 0
-#     for i in result[2:]:
-#         if i == " ":
-#             if first == 0:
-#                 i = ""
-#                 first = 1
-#         else:
-#             i = re.sub('[\r\n\t\f\v]', '', i)
-#             first = 0
-#         newresult.append(i)
-#         result = newresult[0].split()
-#         result = '{"id": ' + result[0] + ', "hostname": ' + '"' +  result[1] + '", "state": '+ str(result[2:]).strip("[]").replace("\'", "\"") + '}"'
-#     return result
-#
-# print(run_command("list --all", "192.168.50.12"))
