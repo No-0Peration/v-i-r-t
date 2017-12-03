@@ -47,8 +47,12 @@ def command():
             virshCommand = "list --all"
         elif "stopped" in params:
             virshCommand = "list --all"
-        else:
-            virshCommand = "dumpxml sne1"
+        elif "all" in params:
+            virshCommand = "list --all"
+    elif command == "start-vm":
+        virshCommand = "start {0}".format(params)
+    elif command == "stop-vm":
+        virshCommand = "start {0}".format(params)
     return run_command(virshCommand, hypervisor)
 
 run(host='0.0.0.0', port=11111, debug=True)
