@@ -1,12 +1,17 @@
 from flask_restful import reqparse, Resource
 from flask import jsonify
+import json
+import xmltodict, xmltojson
 import os
 
 #class which connects to a hypervisor and performs a command requested from the api
 def run_command(command,hypervisor):
     virsh_command = "virsh -c qemu+ssh://{0}/system {1}".format(hypervisor, command)
-    print(str(virsh_command))
-    result = os.system(virsh_command)
+    print(virsh_command)
+    result = os.popen(virsh_command).read().strip("\n")
+    dictresult = xmltodict.parse(result, xml_attribs=True)
+    result = json.dumps(dictresult, indent=4)
+    print(result)
     return result
 
 def virt_install(command,hypervisor,customer):
@@ -14,7 +19,7 @@ def virt_install(command,hypervisor,customer):
     result = os.system(virsh_command)
     return result
 
-# POST /controller command=<string:command>&params=<string:hypervisorID>&customer=<string:customerID>
+# POST /controller command=<string:command>&params=<string:additional parameters>&hypervisor=<string:hypervisorIP>
 class api(Resource):
     def post(self):
         # parse post arguments
@@ -26,6 +31,7 @@ class api(Resource):
         args = parser.parse_args()
 
         if args['command'] == "list-vms":
+            print("command recieved list-vms")
             if args['params'] == "powered-on":
                 command = "list --all"
                 result = run_command(command,args['hypervisor'])
@@ -33,9 +39,10 @@ class api(Resource):
                 command = "list --all"
                 result = run_command(command, args['hypervisor'])
             else:
-                command = "list --all"
+                command = "dumpxml sne1"
                 result = run_command(command, args['hypervisor'])
-            return jsonify(result)
+
+            return result
 
         elif args['command'] == "get-vm":
             command = "virsh list {0}".format(args['params'])
@@ -82,5 +89,5 @@ class api(Resource):
             result = run_command(command, args['hypervisor'], args['customer'])
             return jsonify(result)
 
-
-
+# live migration or just migration
+# virsh migrate --live GuestName DestinationURL
