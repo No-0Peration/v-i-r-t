@@ -2,7 +2,7 @@ from bottle import request, route, run
 import libvirt
 import os, re
 
-conn = libvirt.open('qemu:///system')
+conn = libvirt.open('qemu+ssh://192.168.50.12/system')
 
 def run_command(command,hypervisor):
     virshCommand = "virsh -c qemu+ssh://{0}/system {1}".format(hypervisor, command)
