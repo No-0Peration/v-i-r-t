@@ -1,5 +1,8 @@
 from bottle import request, route, run
+import libvirt
 import os, re
+
+conn = libvirt.open('qemu:///system')
 
 def run_command(command,hypervisor):
     virshCommand = "virsh -c qemu+ssh://{0}/system {1}".format(hypervisor, command)
@@ -54,6 +57,10 @@ def command():
         virshCommand = "start {0}".format(vm)
     elif command == "stop-vm":
         virshCommand = "destroy {0}".format(vm)
+    elif command == "get-mem":
+        mem = conn.getInfo()
+        memused = conn.getFreeMemory()
+        return str('{"totalmem": "' + str(mem[1]) + 'MB", "memfree": "' + str(memused/1024/1024) + 'MB"}')
     return run_command(virshCommand, hypervisor)
 
 run(host='0.0.0.0', port=11111, debug=True)
