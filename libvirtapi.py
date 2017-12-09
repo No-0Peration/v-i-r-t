@@ -43,20 +43,61 @@ def command():
     params = request.json['params']
     hypervisor = request.json['hypervisor']
     vm = request.json['vm']
-    virshCommand = ""
 
     if command == "list-vms":
         print("command recieved list-vms")
+        result = "{"
+        domainIDs = conn.listDomainsID()
+        print("domids:" + str(domainIDs))
+        if domainIDs == None:
+            print('Failed to get a list of domain IDs')
+            return {"error": "There are no VM's on this hypervisor"}
         if "running" in params:
-            virshCommand = "list --all"
+            for domainID in domainIDs:
+                print(domainID)
+                dom = conn.lookupByID(domainID)
+                print(dom.isActive())
+                if dom.isActive():
+                    state = 'running'
+                else:
+                    state = 'off'
+                if state == 'running':
+                    print('in running')
+                    result += '\n\t"'+ str(dom.name()) + '": "' + state + '"'
+            return result + "\n}"
         elif "stopped" in params:
-            virshCommand = "list --all"
+            for domainID in domainIDs:
+                dom = conn.lookupByID(domainID)
+                if dom.isActive():
+                    state = 'running'
+                else:
+                    state = 'off'
+                if state == 'off':
+                    result += '\n\t"'+ str(dom.name()) + '": "' + state + '"'
+            return result + "\n}"
         elif "all" in params:
-            virshCommand = "list --all"
+            for domainID in domainIDs:
+                dom = conn.lookupByID(domainID)
+                if dom.isActive():
+                    state = 'running'
+                else:
+                    state = 'off'
+                result += '\n\t"'+ str(dom.name()) + '": "' + state + '"'
+            return result + "\n}"
     elif command == "start-vm":
-        virshCommand = "start {0}".format(vm)
+        dom = conn.lookupByName(vm)
+        if dom.isActive():
+            return {"result": "Allready started"}
+        else:
+            dom.create()
+        return {"result": "started"}
     elif command == "stop-vm":
-        virshCommand = "destroy {0}".format(vm)
+        dom = conn.lookupByName(vm)
+        if dom.isActive():
+            dom.destroy()
+        else:
+            return {"result": "Allready started"}
+        return {"result": "stopped"}
     elif command == "get-mem":
         mem = conn.getInfo()
         memused = conn.getFreeMemory()
