@@ -67,6 +67,15 @@ def command():
         else:
             return {"result": "Allready stopped"}
         return {"result": "stopped"}
+    #command to delete an vm
+    elif command == "delete-vm":
+        dom = conn.lookupByName(vm)
+        if dom.isActive():
+            return {"result": "Cannot delete an running VM"}
+        else:
+            dom.undefine()
+            return {"result": "R.I.P. {0}".format(vm)}
+        return {"result": "stopped"}
     #get all hardware info from an specified VM
     elif command == "get-vm":
         dom = conn.lookupByName(vm)
