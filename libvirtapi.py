@@ -1,8 +1,17 @@
 from bottle import request, route, run
 import libvirt
-
+import requests, json
 conn = None
 hypie = ''
+
+def template(command, vm, hypervisor):
+    url = "http://" + str(hypervisor)+"/template"
+    data = {'command': command, 'vm': vm}
+    data_json = json.dumps(data)
+    headers = {'Content-type': 'application/json'}
+    response = requests.post(url, data=data_json, headers=headers)
+    return response
+
 
 # POST /controller command=<string:command>&vm=<string:vm name>&params=<string:additional parameters>&hypervisor=<string:hypervisorIP>
 @route('/command', method='POST')
@@ -51,6 +60,7 @@ def command():
                     state = 'off'
                 result += '\n\t"' + str(domain.name()) + '": "' + state + '"'
             return result + "\n}"
+
     #command to start an stopped VM
     elif command == "start-vm":
         dom = conn.lookupByName(vm)
@@ -59,6 +69,7 @@ def command():
         else:
             dom.create()
         return {"result": "started"}
+
     #command to stop an running VM
     elif command == "stop-vm":
         dom = conn.lookupByName(vm)
@@ -67,6 +78,7 @@ def command():
         else:
             return {"result": "Allready stopped"}
         return {"result": "stopped"}
+
     #command to delete an vm
     elif command == "delete-vm":
         dom = conn.lookupByName(vm)
@@ -74,18 +86,42 @@ def command():
             return {"result": "Cannot delete an running VM"}
         else:
             dom.undefine()
+            template('delete-vm', vm, hypervisor)
             return {"result": "R.I.P. {0}".format(vm)}
         return {"result": "stopped"}
+
     #get all hardware info from an specified VM
     elif command == "get-vm":
         dom = conn.lookupByName(vm)
         state, maxmem, mem, cpus, cput = dom.info()
         return {"state": str(state), "maxMemory": str(maxmem), "currentMemory": str(mem), "numberCPU": str(cpus), "cpuTime": str(cput)}
+
     #get all memory vs free memory of the hypervisor
     elif command == "get-mem":
         mem = conn.getInfo()
         memused = conn.getFreeMemory()
         return str('{"totalmem": "' + str(mem[1]) + 'MB", "memfree": "' + str(memused/1024/1024) + 'MB"}')
+
+    #installs a new vm
+    elif command == "new-vm":
+        if params != None:
+            template(params, vm, hypervisor)
+        xmlconfig = "<domain type='qemu'><name>{0}</name><memory unit='MB'>1024</memory><vcpu>1</vcpu><on_poweroff>destroy</on_poweroff>" \
+                "<on_reboot>restart</on_reboot><on_crash>destroy</on_crash><devices><emulator>/usr/bin/qemu-system-x86_64</emulator>" \
+                "<disk type='file' device='disk'><source file='/var/lib/libvirt/images/{1}.img'/>" \
+                "<driver name='qemu' type='raw'/><target dev='hda'/></disk><interface type='network'><source network='default'/>" \
+                "<model type='virtio'/></interface><input type='mouse' bus='ps2'/><graphics type='vnc' port='-1' listen='127.0.0.1'/></devices>" \
+                "<os><type arch='x86_64' machine='pc'>hvm</type><boot dev='hd'/></os></domain>".format(vm, vm)
+
+        dom = conn.defineXML(xmlconfig)
+        if dom == None:
+            print('XML not Accepted')
+
+        if dom.create() < 0:
+            return {"error": "Cannot boot VM"}
+        return {str(dom.name()): "has booted"}
+
+
     # if no commands match the request parameters, return an error
     return {"Error": "Not a valid command"}
 
