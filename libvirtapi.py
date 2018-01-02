@@ -16,10 +16,22 @@ def template(command, vm, hypervisor):
 # POST /controller command=<string:command>&vm=<string:vm name>&params=<string:additional parameters>&hypervisor=<string:hypervisorIP>
 @route('/command', method='POST')
 def command():
-    command = request.json['command']
-    params = request.json['params']
-    hypervisor = request.json['hypervisor']
-    vm = request.json['vm']
+    if request.json['command']:
+        command = request.json['command']
+    else:
+        return {"error": "no command"}
+    if request.json['params']:
+        params = request.json['params']
+    else:
+        params = ''
+    if request.json['hypervisor']:
+        hypervisor = request.json['hypervisor']
+    else:
+        return {"error": "no hypervisor"}
+    if request.json['vm']:
+        vm = request.json['vm']
+    else:
+        vm = ''
 
 # check if the command is for a new hypervisor, then the current connection, if so make a new connection else use current connection
     global conn, hypie
@@ -29,37 +41,47 @@ def command():
 
 # command lists all vm's in a specified state: running, stopped, all
     if command == "list-vms":
-        result = "{"
+        result = {}
         domains = conn.listAllDomains(0)
 
         if domains == None:
             return {"error": "There are no VM's on this hypervisor"}
-        if "running" in params:
+        if params:
+            if "running" in params:
+                for domain in domains:
+                    if domain.isActive():
+                        state = 'running'
+                    else:
+                        state = 'off'
+                    if state == 'running':
+                        result[str(domain.name())] = state
+                return json.dumps(result)
+            elif "stopped" in params:
+                for domain in domains:
+                    if domain.isActive():
+                        state = 'running'
+                    else:
+                        state = 'off'
+                    if state == 'off':
+                        result[str(domain.name())] = state
+                return json.dumps(result)
+            elif "all" in params:
+                for domain in domains:
+                    if domain.isActive():
+                        state = 'running'
+                    else:
+                        state = 'off'
+                    result[str(domain.name())] = state
+            return json.dumps(result)
+        else:
             for domain in domains:
                 if domain.isActive():
                     state = 'running'
                 else:
                     state = 'off'
-                if state == 'running':
-                    result += '\n\t"' + str(domain.name()) + '": "' + state + '"'
-            return result + "\n}"
-        elif "stopped" in params:
-            for domain in domains:
-                if domain.isActive():
-                    state = 'running'
-                else:
-                    state = 'off'
-                if state == 'off':
-                    result += '\n\t"' + str(domain.name()) + '": "' + state + '"'
-            return result + "\n}"
-        elif "all" in params:
-            for domain in domains:
-                if domain.isActive():
-                    state = 'running'
-                else:
-                    state = 'off'
-                result += '\n\t"' + str(domain.name()) + '": "' + state + '"'
-            return result + "\n}"
+                result[str(domain.name())] = state
+            return json.dumps(result)
+
 
     #command to start an stopped VM
     elif command == "start-vm":
@@ -121,6 +143,11 @@ def command():
             return {"error": "Cannot boot VM"}
         return {str(dom.name()): "has booted"}
 
+    # command to delete an vm
+    elif command == "update-vm":
+        dom = conn.lookupByName(vm)
+        dom.setMemory(params)
+    return {str(dom.name()): " updated"}
 
     # if no commands match the request parameters, return an error
     return {"Error": "Not a valid command"}
