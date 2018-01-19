@@ -87,10 +87,16 @@ def command():
     elif command == "start-vm":
         dom = conn.lookupByName(vm)
         if dom.isActive():
-            return {"result": "Allready started"}
+            return {"error": "Allready started"}
         else:
             dom.create()
         return {"result": "started"}
+
+    #command to get ipv4 addresses for vm's
+    elif command == "vm-ip":
+        for lease in conn.networkLookupByName("default").DHCPLeases():
+            print(lease)
+        return json.dumps(lease)
 
     #command to stop an running VM
     elif command == "stop-vm":
@@ -98,14 +104,14 @@ def command():
         if dom.isActive():
             dom.destroy()
         else:
-            return {"result": "Allready stopped"}
+            return {"error": "Allready stopped"}
         return {"result": "stopped"}
 
     #command to delete an vm
     elif command == "delete-vm":
         dom = conn.lookupByName(vm)
         if dom.isActive():
-            return {"result": "Cannot delete an running VM"}
+            return {"error": "Cannot delete an running VM"}
         else:
             dom.undefine()
             template('delete-vm', vm, hypervisor)
@@ -131,8 +137,8 @@ def command():
         xmlconfig = "<domain type='qemu'><name>{0}</name><memory unit='MB'>1024</memory><vcpu>1</vcpu><on_poweroff>destroy</on_poweroff>" \
                 "<on_reboot>restart</on_reboot><on_crash>destroy</on_crash><devices><emulator>/usr/bin/qemu-system-x86_64</emulator>" \
                 "<disk type='file' device='disk'><source file='/var/lib/libvirt/images/{1}.img'/>" \
-                "<driver name='qemu' type='raw'/><target dev='hda'/></disk><interface type='network'><source network='default'/>" \
-                "<model type='virtio'/></interface><input type='mouse' bus='ps2'/><graphics type='vnc' port='-1' listen='127.0.0.1'/></devices>" \
+                "<driver name='qemu' type='raw'/><target dev='hda'/></disk><interface type='network'><source network='vms'/>" \
+                "<model type='virtio'/></interface><input type='mouse' bus='ps2'/><graphics type='vnc' port='-1' autoport='yes' listen='0.0.0.0'/></devices>" \
                 "<os><type arch='x86_64' machine='pc'>hvm</type><boot dev='hd'/></os></domain>".format(vm, vm)
 
         dom = conn.defineXML(xmlconfig)
@@ -141,7 +147,7 @@ def command():
 
         if dom.create() < 0:
             return {"error": "Cannot boot VM"}
-        return {str(dom.name()): "has booted"}
+        return {"result": str(dom.name()) + "has booted"}
 
     # command to delete an vm
     elif command == "update-vm":

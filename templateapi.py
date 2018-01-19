@@ -14,7 +14,7 @@ def command():
         shutil.copyfile('/var/lib/libvirt/images/templ2.img', '/var/lib/libvirt/images/' + vm + '.img')
         return {"result": "image created"}
     elif command == 'new-disk3':
-        shutil.copyfile('/var/lib/libvirt/images/templ2.img', '/var/lib/libvirt/images/' + vm + '.img')
+        shutil.copyfile('/var/lib/libvirt/images/templ3.img', '/var/lib/libvirt/images/' + vm + '.img')
         return {"result": "image created"}
     elif command == 'delete-vm':
         os.remove('/var/lib/libvirt/images/' + vm + '.img')
